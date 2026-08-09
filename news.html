@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新聞輿情整理小工具</title>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-color: #e9ecef;
+      --text-color: #333333;
+      --text-muted: #6c757d;
+      --primary-btn: #495057;
+      --primary-btn-hover: #343a40;
+      --accent-gray: #e2e6ea;
+      --selected-bg: #e8f0fe;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #212529;
+    }
+
+    header .version {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* 左欄與右欄佈局 */
+    .left-panel, .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+    }
+
+    .left-panel {
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+      background: #fafafa;
+    }
+
+    .right-panel {
+      background: #fff;
+      overflow: hidden;
+    }
+
+    /* 元件面板與輸入區 */
+    .panel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus, input[type="text"]:focus {
+      border-color: var(--primary-btn);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      background-color: var(--primary-btn);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--primary-btn-hover);
+    }
+
+    button.btn-secondary {
+      background-color: #6c757d;
+    }
+
+    button.btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    /* 階層分類結構 */
+    .big-category {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 16px;
+      padding: 12px;
+    }
+
+    .big-category-title {
+      font-weight: bold;
+      font-size: 1rem;
+      color: #495057;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent-gray);
+    }
+
+    .sub-category {
+      background: #f8f9fa;
+      border: 1px dashed #ced4da;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .sub-category-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .drag-handle {
+      cursor: grab;
+      color: var(--text-muted);
+      user-select: none;
+      font-weight: bold;
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: #dc3545;
+      border: none;
+      font-size: 1.1rem;
+      padding: 0 4px;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background: transparent;
+      color: #a71d2a;
+    }
+
+    /* 新聞氣泡 */
+    .news-bubble {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .news-bubble.selected {
+      background-color: var(--selected-bg);
+      border-color: #8ab4f8;
+    }
+
+    .news-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .news-content input {
+      border: 1px solid transparent;
+      background: transparent;
+      padding: 2px 4px;
+    }
+
+    .news-content input:hover, .news-content input:focus {
+      border-color: var(--border-color);
+      background: #fff;
+    }
+
+    /* 右欄控制與純文字框 */
+    .controls-card {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .switches {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .switch-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .output-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #outputText {
+      width: 100%;
+      height: 100%;
+      min-height: 250px;
+      font-family: monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: #fdfdfd;
+    }
+
+    /* RWD 響應式調整 */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+        overflow: y-auto;
+      }
+
+      .left-panel {
+        overflow: visible; /* 窄螢幕不出現捲軸，完整顯示 */
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .right-panel {
+        height: 450px; /* 保留獨立高度 */
+        overflow: hidden;
+      }
+
+      .output-area {
+        overflow-y: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>新聞輿情整理小工具</h1>
+    <span class="version">盈誌 V1</span>
+  </header>
+
+  <div class="main-container">
+    <!-- 左欄：控制與編輯區 -->
+    <div class="left-panel">
+      <!-- 新增新聞區 -->
+      <div class="panel-card">
+        <div class="input-group">
+          <textarea id="rawInput" placeholder="請在此貼上新聞標題與網址（自動識別換行）..."></textarea>
+        </div>
+        <div class="btn-row">
+          <button onclick="addNewsFromInput()">新增新聞</button>
+        </div>
+      </div>
+
+      <!-- 新增小分類區 -->
+      <div class="panel-card" style="padding: 10px 16px;">
+        <div class="btn-row">
+          <input type="text" id="newSubCatName" placeholder="自訂新聞分類名稱...">
+          <button class="btn-secondary" onclick="addNewSubCategory()">建立新聞分類</button>
+        </div>
+      </div>
+
+      <!-- 分類與新聞樹狀結構 -->
+      <div id="categoryTree"></div>
+    </div>
+
+    <!-- 右欄：輸出與按鈕區 -->
+    <div class="right-panel">
+      <div class="panel-card controls-card">
+        <div class="switches">
+          <label class="switch-label">
+            <input type="checkbox" id="tagStyleSwitch" onchange="renderOutput()">
+            使用 #分類 代替 【分類】
+          </label>
+          <label class="switch-label">
+            <input type="checkbox" id="numberingSwitch" onchange="renderOutput()">
+            標題加上數字編號 (1. 2. 3.)
+          </label>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="shortenUrls()">一鍵短網址</button>
+          <button onclick="copyToClipboard()">複製到剪貼簿</button>
+        </div>
+      </div>
+
+      <div class="output-area">
+        <textarea id="outputText" placeholder="輿情整理文字將同步顯示於此..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 取得當前 YYYYMMDD 日期
+    function getTodayString() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      return `${yyyy}${mm}${dd}`;
+    }
+
+    const todayStr = getTodayString();
+
+    // 資料結構初始化
+    let data = [
+      {
+        id: 'big_1',
+        title: `${todayStr} 早報輿情整理`,
+        subCategories: [
+          { id: 'sub_default_1', title: '未分類新聞', items: [] }
+        ]
+      },
+      {
+        id: 'big_2',
+        title: `${todayStr} 新北輿情整理`,
+        subCategories: [
+          { id: 'sub_default_2', title: '未分類新聞', items: [] }
+        ]
+      }
+    ];
+
+    let selectedNewsIds = new Set();
+    let lastSelectedNewsId = null;
+
+    // 媒體對照表
+    const mediaDomains = [
+      { key: 'udn', name: '聯合' },
+      { key: 'ltn', name: '自由' },
+      { key: 'chinatimes', name: '中時' },
+      { key: 'tvbs', name: 'TVBS' },
+      { key: 'ettoday', name: 'ETtoday' },
+      { key: 'setn', name: '三立' },
+      { key: 'storm', name: '風傳媒' },
+      { key: 'cna', name: '中央社' },
+      { key: 'ebc', name: '東森' },
+      { key: 'apple', name: '蘋果' },
+      { key: 'now news', name: 'NOWnews' },
+      { key: 'cts', name: '華視' },
+      { key: 'ttv', name: '台視' },
+      { key: 'ftv', name: '民視' }
+    ];
+
+    // 初始化自動監聽與渲染
+    window.onload = () => {
+      renderLeftPanel();
+      renderOutput();
+
+      // 輸入框貼上處理：檢測自動分行
+      document.getElementById('rawInput').addEventListener('paste', (e) => {
+        setTimeout(() => {
+          let val = e.target.value;
+          // 若包含網址且沒有換行，自動將網址前加上換行
+          const urlRegex = /(https?:\/\/[^\s]+)/g;
+          if (val.match(urlRegex) && !val.includes('\n')) {
+            e.target.value = val.replace(urlRegex, '\n$1').trim();
+          }
+        }, 50);
+      });
+    };
+
+    // 判斷媒體來源
+    function getMediaTag(url) {
+      if (!url) return '';
+      const lowerUrl = url.toLowerCase();
+      for (const media of mediaDomains) {
+        if (lowerUrl.includes(media.key)) {
+          return `(${media.name})`;
+        }
+      }
+      return '';
+    }
+
+    // 新增新聞邏輯
+    function addNewsFromInput() {
+      const rawText = document.getElementById('rawInput').value.trim();
+      if (!rawText) return;
+
+      const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
+      let title = '';
+      let url = '';
+
+      // 判斷哪一行是網址
+      lines.forEach(line => {
+        if (line.startsWith('http://') || line.startsWith('https://')) {
+          url = line;
+        } else {
+          title += (title ? ' ' : '') + line;
+        }
+      });
+
+      if (!title && url) title = '新聞連結';
+
+      const newItem = {
+        id: 'news_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        title: title,
+        url: url
+      };
+
+      // 預設放到「早報輿情整理」的「未分類新聞」
+      data[0].subCategories[0].items.push(newItem);
+
+      document.getElementById('rawInput').value = '';
+      renderLeftPanel();
+      renderOutput();
+      
+      // 自動複製到剪貼簿
+      copyToClipboard(true);
+    }
+
+    // 新增小分類邏輯
+    function addNewSubCategory() {
+      const input = document.getElementById('newSubCatName');
+      const title = input.value.trim();
+      if (!title) return;
+
+      const newSub = {
+        id: 'sub_' + Date.now(),
+        title: title,
+        items: []
+      };
+
+      // 預設建立在早報輿情整理下
+      data[0].subCategories.push(newSub);
+      input.value = '';
+      renderLeftPanel();
+      renderOutput();
+    }
+
+    // 渲染左欄
+    function renderLeftPanel() {
+      const container = document.getElementById('categoryTree');
+      container.innerHTML = '';
+
+      data.forEach((bigCat, bigIdx) => {
+        const bigDiv = document.createElement('div');
+        bigDiv.className = 'big-category';
+
+        // 大分類標題 (可編輯)
+        const bigTitle = document.createElement('div');
+        bigTitle.className = 'big-category-title';
+        bigTitle.innerHTML = `<input type="text" value="${escapeHtml(bigCat.title)}" onchange="updateBigCatTitle(${bigIdx}, this.value)">`;
+        bigDiv.appendChild(bigTitle);
+
+        // 小分類列表
+        bigCat.subCategories.forEach((subCat, subIdx) => {
+          const subDiv = document.createElement('div');
+          subDiv.className = 'sub-category';
+          subDiv.dataset.bigIdx = bigIdx;
+          subDiv.dataset.subIdx = subIdx;
+
+          // 拖拽放置區 (小分類)
+          subDiv.ondragover = (e) => e.preventDefault();
+          subDiv.ondrop = (e) => handleDropOnSubCat(e, bigIdx, subIdx);
+
+          const subHeader = document.createElement('div');
+          subHeader.className = 'sub-category-header';
+          subHeader.draggable = true;
+          subHeader.ondragstart = (e) => handleSubCatDragStart(e, bigIdx, subIdx);
+
+          subHeader.innerHTML = `
+            <span class="drag-handle" title="拖動分類">⋮⋮</span>
+            <input type="text" value="${escapeHtml(subCat.title)}" onchange="updateSubCatTitle(${bigIdx}, ${subIdx}, this.value)">
+            ${subCat.title !== '未分類新聞' ? `<button class="btn-delete" onclick="deleteSubCat(${bigIdx}, ${subIdx})">×</button>` : ''}
+          `;
+          subDiv.appendChild(subHeader);
+
+          // 新聞氣泡列表
+          const itemsDiv = document.createElement('div');
+          itemsDiv.className = 'news-items-container';
+
+          subCat.items.forEach((item, itemIdx) => {
+            const bubble = document.createElement('div');
+            bubble.className = `news-bubble ${selectedNewsIds.has(item.id) ? 'selected' : ''}`;
+            bubble.draggable = true;
+            bubble.dataset.id = item.id;
+
+            // 選擇與拖曳事件
+            bubble.onclick = (e) => handleNewsClick(e, item.id);
+            bubble.ondragstart = (e) => handleNewsDragStart(e, item.id);
+            bubble.ondragover = (e) => e.preventDefault();
+            bubble.ondrop = (e) => handleDropOnNews(e, bigIdx, subIdx, itemIdx);
+
+            bubble.innerHTML = `
+              <span class="drag-handle" title="拖動新聞">⋮⋮</span>
+              <div class="news-content">
+                <input type="text" value="${escapeHtml(item.title)}" placeholder="新聞標題" onchange="updateNewsItem(${bigIdx}, ${subIdx}, ${itemIdx}, 'title', this.value)">
+                <input type="text" value="${escapeHtml(item.url)}" placeholder="新聞網址" onchange="updateNewsItem(${bigIdx}, ${subIdx}, ${itemIdx}, 'url', this.value)">
+              </div>
+              <button class="btn-delete" onclick="deleteNewsItem(${bigIdx}, ${subIdx}, ${itemIdx})">×</button>
+            `;
+            itemsDiv.appendChild(bubble);
+          });
+
+          subDiv.appendChild(itemsDiv);
+          bigDiv.appendChild(subDiv);
+        });
+
+        container.appendChild(bigDiv);
+      });
+    }
+
+    // 轉義 HTML 特殊字元
+    function escapeHtml(str) {
+      return str.replace(/"/g, "&quot;");
+    }
+
+    // 更新資料函式群
+    function updateBigCatTitle(idx, val) {
+      data[idx].title = val;
+      renderOutput();
+    }
+
+    function updateSubCatTitle(bigIdx, subIdx, val) {
+      data[bigIdx].subCategories[subIdx].title = val;
+      renderOutput();
+    }
+
+    function updateNewsItem(bigIdx, subIdx, itemIdx, field, val) {
+      data[bigIdx].subCategories[subIdx].items[itemIdx][field] = val;
+      renderOutput();
+    }
+
+    function deleteSubCat(bigIdx, subIdx) {
+      // 刪除小分類時，將裡面的新聞移至未分類新聞
+      const itemsToMove = data[bigIdx].subCategories[subIdx].items;
+      data[bigIdx].subCategories[0].items.push(...itemsToMove);
+      data[bigIdx].subCategories.splice(subIdx, 1);
+      renderLeftPanel();
+      renderOutput();
+    }
+
+    function deleteNewsItem(bigIdx, subIdx, itemIdx) {
+      const id = data[bigIdx].subCategories[subIdx].items[itemIdx].id;
+      selectedNewsIds.delete(id);
+      data[bigIdx].subCategories[subIdx].items.splice(itemIdx, 1);
+      renderLeftPanel();
+      renderOutput();
+    }
+
+    // 多選 (Shift / Ctrl / Cmd) 邏輯
+    function handleNewsClick(e, id) {
+      e.stopPropagation();
+      const allNewsList = getAllNewsFlatList();
+      
+      if (e.shiftKey && lastSelectedNewsId) {
+        const startIdx = allNewsList.findIndex(n => n.id === lastSelectedNewsId);
+        const endIdx = allNewsList.findIndex(n => n.id === id);
+        const [low, high] = [startIdx, endIdx].sort((a, b) => a - b);
+        
+        for (let i = low; i <= high; i++) {
+          selectedNewsIds.add(allNewsList[i].id);
+        }
+      } else if (e.ctrlKey || e.metaKey) {
+        if (selectedNewsIds.has(id)) {
+          selectedNewsIds.delete(id);
+        } else {
+          selectedNewsIds.add(id);
+        }
+        lastSelectedNewsId = id;
+      } else {
+        selectedNewsIds.clear();
+        selectedNewsIds.add(id);
+        lastSelectedNewsId = id;
+      }
+      renderLeftPanel();
+    }
+
+    function getAllNewsFlatList() {
+      let flat = [];
+      data.forEach(b => b.subCategories.forEach(s => flat.push(...s.items)));
+      return flat;
+    }
+
+    // 拖拽處理 - 新聞氣泡
+    function handleNewsDragStart(e, id) {
+      if (!selectedNewsIds.has(id)) {
+        selectedNewsIds.clear();
+        selectedNewsIds.add(id);
+        lastSelectedNewsId = id;
+        renderLeftPanel();
+      }
+      e.dataTransfer.setData('type', 'news');
+    }
+
+    function handleDropOnSubCat(e, targetBigIdx, targetSubIdx) {
+      e.preventDefault();
+      e.stopPropagation();
+      const type = e.dataTransfer.getData('type');
+      if (type === 'news') {
+        moveSelectedNewsTo(targetBigIdx, targetSubIdx);
+      }
+    }
+
+    function handleDropOnNews(e, targetBigIdx, targetSubIdx, targetItemIdx) {
+      e.preventDefault();
+      e.stopPropagation();
+      const type = e.dataTransfer.getData('type');
+      if (type === 'news') {
+        moveSelectedNewsTo(targetBigIdx, targetSubIdx, targetItemIdx);
+      }
+    }
+
+    function moveSelectedNewsTo(targetBigIdx, targetSubIdx, targetItemIdx = null) {
+      let movedItems = [];
+      
+      // 從原位置移除
+      data.forEach(b => {
+        b.subCategories.forEach(s => {
+          s.items = s.items.filter(item => {
+            if (selectedNewsIds.has(item.id)) {
+              movedItems.push(item);
+              return false;
+            }
+            return true;
+          });
+        });
+      });
+
+      // 放入新位置
+      const targetList = data[targetBigIdx].subCategories[targetSubIdx].items;
+      if (targetItemIdx === null) {
+        targetList.push(...movedItems);
+      } else {
+        targetList.splice(targetItemIdx, 0, ...movedItems);
+      }
+
+      renderLeftPanel();
+      renderOutput();
+    }
+
+    // 拖拽處理 - 小分類
+    function handleSubCatDragStart(e, bigIdx, subIdx) {
+      e.dataTransfer.setData('type', 'subCat');
+      e.dataTransfer.setData('sourceBigIdx', bigIdx);
+      e.dataTransfer.setData('sourceSubIdx', subIdx);
+    }
+
+    // 渲染右欄最終文字
+    function renderOutput() {
+      const useHash = document.getElementById('tagStyleSwitch').checked;
+      const useNumbering = document.getElementById('numberingSwitch').checked;
+
+      let outputLines = [];
+
+      data.forEach(bigCat => {
+        // 檢查該大分類下是否有新聞氣泡
+        let totalItems = 0;
+        bigCat.subCategories.forEach(s => totalItems += s.items.length);
+
+        if (totalItems > 0) {
+          outputLines.push(bigCat.title);
+          outputLines.push(''); // 空行
+
+          bigCat.subCategories.forEach(subCat => {
+            if (subCat.items.length > 0) {
+              // 分類名稱格式
+              const catLabel = useHash ? `#${subCat.title}` : `【${subCat.title}】`;
+              outputLines.push(catLabel);
+
+              subCat.items.forEach((item, idx) => {
+                const numberPrefix = useNumbering ? `${idx + 1}. ` : '';
+                const mediaTag = getMediaTag(item.url);
+                const titleLine = `${numberPrefix}${item.title}${mediaTag}`;
+                
+                outputLines.push(titleLine);
+                if (item.url) outputLines.push(item.url);
+                outputLines.push(''); // 氣泡間空行
+              });
+            }
+          });
+        }
+      });
+
+      document.getElementById('outputText').value = outputLines.join('\n').trim();
+    }
+// Reurl 一鍵短網址 API (支援本地 file:// 跨網域存取與錯誤處理)
+    async function shortenUrls() {
+      const apiKey = "4070ff49d794e43312533b663c974755ecd4b635959b04df8a38b58d65165567c4f5d6";
+      let targetItems = [];
+
+      // 收集需要縮網址的項目
+      data.forEach(bigCat => {
+        bigCat.subCategories.forEach(subCat => {
+          subCat.items.forEach(item => {
+            if (item.url) {
+              const lowerUrl = item.url.toLowerCase();
+              // 排除 YouTube 與已縮短的 reurl 網址
+              if (!lowerUrl.includes('youtube.com') && 
+                  !lowerUrl.includes('youtu.be') && 
+                  !lowerUrl.includes('reurl.cc')) {
+                targetItems.push(item);
+              }
+            }
+          });
+        });
+      });
+
+      if (targetItems.length === 0) {
+        alert('沒有需要縮短的網址（已排除 YouTube 或已是短網址）。');
+        return;
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let item of targetItems) {
+        try {
+          // 優先嘗試直接發送 Request
+          let response = await fetch('https://api.reurl.cc/v1/shorten', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'reurl-api-key': apiKey
+            },
+            body: JSON.stringify({ url: item.url })
+          });
+
+          // 若遇到本地端的 CORS 擋抓，改走代理備援
+          if (!response.ok && response.status === 0) {
+            throw new Error("CORS_BLOCKED");
+          }
+
+          let resData = await response.json();
+          if (resData && resData.res === 'success' && resData.short_url) {
+            item.url = resData.short_url;
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (err) {
+          // 跨網域失敗時的備援方案 (使用 corsproxy)
+          try {
+            let proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.reurl.cc/v1/shorten');
+            let response = await fetch(proxyUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'reurl-api-key': apiKey
+              },
+              body: JSON.stringify({ url: item.url })
+            });
+
+            let resData = await response.json();
+            if (resData && resData.res === 'success' && resData.short_url) {
+              item.url = resData.short_url;
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } catch (proxyErr) {
+            console.error("縮網址失敗:", proxyErr);
+            failCount++;
+          }
+        }
+      }
+
+      // 更新畫面與純文字預覽
+      renderLeftPanel();
+      renderOutput();
+
+      if (failCount === 0) {
+        alert(`成功縮短 ${successCount} 個網址！`);
+      } else {
+        alert(`完成！成功：${successCount} 個，失敗：${failCount} 個。（請檢查 API Key 是否有配額或網址格式）`);
+      }
+    }
+
+    // 複製至剪貼簿
+    function copyToClipboard(silent = false) {
+      const text = document.getElementById('outputText').value;
+      if (!text) return;
+
+      navigator.clipboard.writeText(text).then(() => {
+        if (!silent) alert('已複製到剪貼簿！');
+      }).catch(err => {
+        console.error('複製失敗: ', err);
+      });
+    }
+  </script>
+</body>
+</html>
