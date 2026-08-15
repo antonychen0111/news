@@ -1,679 +1,860 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>新聞輿情整理小工具</title>
+  <link rel="icon" href="https://chiao.tw/wp-content/uploads/2026/06/%E5%AE%98%E7%B6%B2%E7%B4%A0%E6%9D%90_logo.svg" type="image/svg+xml" />
+  
+  <!-- FontAwesome Icons & Tailwind CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    :root {
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --border-color: #e9ecef;
-      --text-color: #333333;
-      --text-muted: #6c757d;
-      --primary-btn: #495057;
-      --primary-btn-hover: #343a40;
-      --accent-gray: #e2e6ea;
-      --selected-bg: #e8f0fe;
+    /* iOS Toggle Switch Styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
     }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      background: #fff;
-      border-bottom: 1px solid var(--border-color);
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-
-    header h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #212529;
-    }
-
-    header .version {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* 左欄與右欄佈局 */
-    .left-panel, .right-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      gap: 16px;
-    }
-
-    .left-panel {
-      border-right: 1px solid var(--border-color);
-      overflow-y: auto;
-      background: #fafafa;
-    }
-
-    .right-panel {
-      background: #fff;
-      overflow: hidden;
-    }
-
-    /* 元件面板與輸入區 */
-    .panel-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    textarea, input[type="text"] {
-      width: 100%;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      padding: 8px 12px;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    textarea:focus, input[type="text"]:focus {
-      border-color: var(--primary-btn);
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    .btn-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    button {
-      background-color: var(--primary-btn);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-size: 0.9rem;
+    .slider {
+      position: absolute;
       cursor: pointer;
-      transition: background-color 0.2s;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider {
+      background-color: #475569;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
     }
 
-    button:hover {
-      background-color: var(--primary-btn-hover);
+    /* Drag and Drop Insertion Indicator */
+    .drag-over-top {
+      border-top: 3px solid #3b82f6 !important;
+    }
+    .drag-over-bottom {
+      border-bottom: 3px solid #3b82f6 !important;
+    }
+    .drag-over-container {
+      background-color: #f1f5f9 !important;
+      border: 2px dashed #94a3b8 !important;
     }
 
-    button.btn-secondary {
-      background-color: #6c757d;
-    }
-
-    button.btn-secondary:hover {
-      background-color: #5a6268;
-    }
-
-    /* 階層分類結構 */
-    .big-category {
-      background: #fff;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      margin-bottom: 16px;
-      padding: 12px;
-    }
-
-    .big-category-title {
-      font-weight: bold;
-      font-size: 1rem;
-      color: #495057;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 2px solid var(--accent-gray);
-    }
-
-    .sub-category {
-      background: #f8f9fa;
-      border: 1px dashed #ced4da;
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    .sub-category-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .drag-handle {
-      cursor: grab;
-      color: var(--text-muted);
-      user-select: none;
-      font-weight: bold;
-    }
-
-    .btn-delete {
-      background: transparent;
-      color: #dc3545;
-      border: none;
-      font-size: 1.1rem;
-      padding: 0 4px;
-      cursor: pointer;
-    }
-
-    .btn-delete:hover {
-      background: transparent;
-      color: #a71d2a;
-    }
-
-    /* 新聞氣泡 */
-    .news-bubble {
-      background: #fff;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-    }
-
+    /* News Item Selected State */
     .news-bubble.selected {
-      background-color: var(--selected-bg);
-      border-color: #8ab4f8;
+      background-color: #e2e8f0;
+      border-color: #64748b;
     }
 
-    .news-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    /* Scrollbar Styling */
+    textarea::-webkit-scrollbar, div::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
     }
-
-    .news-content input {
-      border: 1px solid transparent;
-      background: transparent;
-      padding: 2px 4px;
+    textarea::-webkit-scrollbar-thumb, div::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
     }
-
-    .news-content input:hover, .news-content input:focus {
-      border-color: var(--border-color);
-      background: #fff;
-    }
-
-    /* 右欄控制與純文字框 */
-    .controls-card {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .switches {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      font-size: 0.9rem;
-    }
-
-    .switch-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .output-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #outputText {
-      width: 100%;
-      height: 100%;
-      min-height: 250px;
-      font-family: monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      background: #fdfdfd;
-    }
-
-    /* RWD 響應式調整 */
-    @media (max-width: 768px) {
-      .main-container {
-        flex-direction: column;
-        overflow: y-auto;
-      }
-
-      .left-panel {
-        overflow: visible; /* 窄螢幕不出現捲軸，完整顯示 */
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-      }
-
-      .right-panel {
-        height: 450px; /* 保留獨立高度 */
-        overflow: hidden;
-      }
-
-      .output-area {
-        overflow-y: auto;
-      }
+    textarea::-webkit-scrollbar-thumb:hover, div::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
   </style>
 </head>
-<body>
+<body class="bg-gray-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-  <header>
-    <h1>新聞輿情整理小工具</h1>
-    <span class="version">盈誌 V1</span>
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    <div class="flex items-center space-x-3">
+      <img src="https://chiao.tw/wp-content/uploads/2026/06/%E5%AE%98%E7%B6%B2%E7%B4%A0%E6%9D%90_logo.svg" alt="Logo" class="w-7 h-7 object-contain" onerror="this.src='https://via.placeholder.com/28?text=N'" />
+      <h1 class="text-xl font-bold text-slate-800 tracking-wide">新聞輿情整理小工具</h1>
+    </div>
+    <div class="text-xs font-medium text-slate-400">
+      20260816 盈誌 V1
+    </div>
   </header>
 
-  <div class="main-container">
-    <!-- 左欄：控制與編輯區 -->
-    <div class="left-panel">
-      <!-- 新增新聞區 -->
-      <div class="panel-card">
-        <div class="input-group">
-          <textarea id="rawInput" placeholder="請在此貼上新聞標題與網址（自動識別換行）..."></textarea>
-        </div>
-        <div class="btn-row">
-          <button onclick="addNewsFromInput()">新增新聞</button>
+  <!-- Main Container -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Input & Hierarchy Editor -->
+    <section class="lg:col-span-7 flex flex-col space-y-6">
+      
+      <!-- Input Panel -->
+      <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <div class="flex flex-row space-x-3">
+          <textarea
+            id="newsInput"
+            class="flex-1 h-24 p-3 text-sm border border-slate-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
+            placeholder="請在此依序貼上新聞標題及網址..."
+          ></textarea>
+          <button
+            id="addNewsBtn"
+            class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow flex items-center justify-center space-x-1.5 transition shrink-0 h-24"
+          >
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>新增新聞</span>
+          </button>
         </div>
       </div>
 
-      <!-- 新增小分類區 -->
-      <div class="panel-card" style="padding: 10px 16px;">
-        <div class="btn-row">
-          <input type="text" id="newSubCatName" placeholder="自訂新聞分類名稱...">
-          <button class="btn-secondary" onclick="addNewSubCategory()">建立新聞分類</button>
-        </div>
+      <!-- Main Section List -->
+      <div id="sectionsContainer" class="space-y-6">
+        <!-- Sections dynamically generated via JS -->
       </div>
 
-      <!-- 分類與新聞樹狀結構 -->
-      <div id="categoryTree"></div>
-    </div>
+    </section>
 
-    <!-- 右欄：輸出與按鈕區 -->
-    <div class="right-panel">
-      <div class="panel-card controls-card">
-        <div class="switches">
-          <label class="switch-label">
-            <input type="checkbox" id="tagStyleSwitch" onchange="renderOutput()">
-            使用 #分類 代替 【分類】
-          </label>
-          <label class="switch-label">
-            <input type="checkbox" id="numberingSwitch" onchange="renderOutput()">
-            標題加上數字編號 (1. 2. 3.)
-          </label>
+    <!-- Right Column: Export Preview Area -->
+    <section class="lg:col-span-5 flex flex-col">
+      <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm sticky top-24 flex flex-col space-y-4">
+        
+        <!-- Controls Bar 1: Action Buttons -->
+        <div class="flex items-center space-x-3">
+          <button
+            id="copyBtn"
+            class="flex-1 py-2 px-4 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-md shadow flex items-center justify-center space-x-2 transition"
+          >
+            <i class="fa-regular fa-copy"></i>
+            <span>複製到剪貼簿</span>
+          </button>
+          <button
+            id="shortenBtn"
+            class="flex-1 py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-sm font-medium rounded-md flex items-center justify-center space-x-2 transition"
+          >
+            <i class="fa-solid fa-link"></i>
+            <span>一鍵短網址</span>
+          </button>
         </div>
-        <div class="btn-row">
-          <button class="btn-secondary" onclick="shortenUrls()">一鍵短網址</button>
-          <button onclick="copyToClipboard()">複製到剪貼簿</button>
-        </div>
-      </div>
 
-      <div class="output-area">
-        <textarea id="outputText" placeholder="輿情整理文字將同步顯示於此..."></textarea>
+        <!-- Controls Bar 2: Settings -->
+        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-md border border-slate-200 text-sm">
+          <!-- Category Format -->
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-semibold text-slate-500">分類格式：</span>
+            <select id="catFormatSelect" class="bg-white border border-slate-300 text-slate-700 rounded px-2 py-1 text-xs focus:outline-none">
+              <option value="bracket">【分類名】</option>
+              <option value="hashtag">#分類名</option>
+            </select>
+          </div>
+
+          <!-- Numbering Switch -->
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-semibold text-slate-500">數字編號：</span>
+            <label class="switch">
+              <input type="checkbox" id="numToggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Export Output Text Area -->
+        <textarea
+          id="exportOutput"
+          readonly
+          class="w-full h-[350px] lg:h-[calc(100vh-280px)] min-h-[300px] p-3 font-mono text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none resize-none leading-relaxed"
+          placeholder="將即時導出文字顯示於此..."
+        ></textarea>
+
       </div>
-    </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-4 py-2.5 rounded-md shadow-lg text-sm font-medium transition transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-2">
+    <i id="toastIcon" class="fa-solid fa-check-circle text-emerald-400"></i>
+    <span id="toastMsg">訊息內容</span>
   </div>
 
+  <!-- JavaScript Application Logic -->
   <script>
-    // 取得當前 YYYYMMDD 日期
-    function getTodayString() {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      return `${yyyy}${mm}${dd}`;
-    }
-
-    const todayStr = getTodayString();
-
-    // 資料結構初始化
-    let data = [
-      {
-        id: 'big_1',
-        title: `${todayStr} 早報輿情整理`,
-        subCategories: [
-          { id: 'sub_default_1', title: '未分類新聞', items: [] }
-        ]
-      },
-      {
-        id: 'big_2',
-        title: `${todayStr} 新北輿情整理`,
-        subCategories: [
-          { id: 'sub_default_2', title: '未分類新聞', items: [] }
-        ]
-      }
+    // --- Initial State & Config ---
+    const mediaRules = [
+      { key: 'udn', label: '(聯合)' },
+      { key: 'ltn', label: '(自由)' },
+      { key: 'chinatimes', label: '(中時)' },
+      { key: 'cna', label: '(中央社)' },
+      { key: 'tvbs', label: '(TVBS)' },
+      { key: 'ettoday', label: '(ETtoday)' },
+      { key: 'storm', label: '(風傳媒)' },
+      { key: 'setn', label: '(三立)' },
+      { key: 'cts', label: '(華視)' },
+      { key: 'ebc', label: '(東森)' },
+      { key: 'ttv', label: '(台視)' },
+      { key: 'ftv', label: '(民視)' },
+      { key: 'nownews', label: '(NOWnews)' },
+      { key: 'mirrormedia', label: '(鏡週刊)' },
+      { key: 'businesstoday', label: '(今周刊)' },
+      { key: 'cw.com.tw', label: '(天下)' },
+      { key: 'hbrtaiwan', label: '(哈佛商業評論)' },
+      { key: 'technews', label: '(科技新報)' }
     ];
 
+    const getTodayStr = () => {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}${mm}${dd}`;
+    };
+
+    const todayStr = getTodayStr();
+
+    // Data Structure
+    let state = {
+      sections: [
+        {
+          id: 'sec_1',
+          name: `${todayStr} 早報輿情整理`,
+          subcategories: [
+            { id: 'sub_uncat_1', name: '未分類新聞', isDefault: true, news: [] }
+          ]
+        },
+        {
+          id: 'sec_2',
+          name: `${todayStr} 新北輿情整理`,
+          subcategories: [
+            { id: 'sub_uncat_2', name: '未分類新聞', isDefault: true, news: [] }
+          ]
+        }
+      ],
+      options: {
+        catFormat: 'bracket', // 'bracket' | 'hashtag'
+        useNumbering: false
+      }
+    };
+
+    // Selected News State (for Shift/Ctrl multi-select)
     let selectedNewsIds = new Set();
     let lastSelectedNewsId = null;
 
-    // 媒體對照表
-    const mediaDomains = [
-      { key: 'udn', name: '聯合' },
-      { key: 'ltn', name: '自由' },
-      { key: 'chinatimes', name: '中時' },
-      { key: 'tvbs', name: 'TVBS' },
-      { key: 'ettoday', name: 'ETtoday' },
-      { key: 'setn', name: '三立' },
-      { key: 'storm', name: '風傳媒' },
-      { key: 'cna', name: '中央社' },
-      { key: 'ebc', name: '東森' },
-      { key: 'apple', name: '蘋果' },
-      { key: 'now news', name: 'NOWnews' },
-      { key: 'cts', name: '華視' },
-      { key: 'ttv', name: '台視' },
-      { key: 'ftv', name: '民視' }
-    ];
-
-    // 初始化自動監聽與渲染
-    window.onload = () => {
-      renderLeftPanel();
-      renderOutput();
-
-      // 輸入框貼上處理：檢測自動分行
-      document.getElementById('rawInput').addEventListener('paste', (e) => {
-        setTimeout(() => {
-          let val = e.target.value;
-          // 若包含網址且沒有換行，自動將網址前加上換行
-          const urlRegex = /(https?:\/\/[^\s]+)/g;
-          if (val.match(urlRegex) && !val.includes('\n')) {
-            e.target.value = val.replace(urlRegex, '\n$1').trim();
-          }
-        }, 50);
-      });
-    };
-
-    // 判斷媒體來源
-    function getMediaTag(url) {
-      if (!url) return '';
-      const lowerUrl = url.toLowerCase();
-      for (const media of mediaDomains) {
-        if (lowerUrl.includes(media.key)) {
-          return `(${media.name})`;
+    // --- Media Name Recognition Helper ---
+    function applyMediaTag(title, url) {
+      if (!url) return title;
+      // Clean title from existing media tag if any to avoid duplication
+      let cleanTitle = title.replace(/\([^)]+\)$/, '').trim();
+      
+      for (const rule of mediaRules) {
+        if (url.toLowerCase().includes(rule.key)) {
+          return `${cleanTitle}${rule.label}`;
         }
       }
-      return '';
+      return title;
     }
 
-    // 新增新聞邏輯
-    function addNewsFromInput() {
-      const rawText = document.getElementById('rawInput').value.trim();
+    // --- Toast Notification Helper ---
+    function showToast(msg, iconClass = 'fa-check-circle text-emerald-400') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+      
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid ${iconClass}`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Helper to format input text (Auto-line break title and URL on paste)
+    function autoFormatInput(str) {
+      const urlRegex = /(https?:\/\/[^\s]+)/gi;
+      let lines = str.split('\n');
+      let newLines = [];
+
+      for (let line of lines) {
+        let trimmed = line.trim();
+        if (!trimmed) continue;
+
+        // Check if line contains both title text and a URL without break
+        let matches = [...trimmed.matchAll(urlRegex)];
+        if (matches.length > 0) {
+          let lastIdx = 0;
+          for (let m of matches) {
+            let url = m[0];
+            let urlIdx = m.index;
+            let precedingText = trimmed.substring(lastIdx, urlIdx).trim();
+            if (precedingText) {
+              newLines.push(precedingText);
+            }
+            newLines.push(url);
+            lastIdx = urlIdx + url.length;
+          }
+          let trailingText = trimmed.substring(lastIdx).trim();
+          if (trailingText) {
+            newLines.push(trailingText);
+          }
+        } else {
+          newLines.push(trimmed);
+        }
+      }
+      return newLines.join('\n');
+    }
+
+    // --- App Initializer ---
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDOM();
+      setupEventListeners();
+      updateExportText(true); // Sync to clipboard on initial render if required
+    });
+
+    // --- Event Listeners Setup ---
+    function setupEventListeners() {
+      const inputEl = document.getElementById('newsInput');
+
+      // Auto break line on paste if title and URL are together
+      inputEl.addEventListener('paste', (e) => {
+        setTimeout(() => {
+          inputEl.value = autoFormatInput(inputEl.value);
+        }, 10);
+      });
+
+      // Add News Button
+      document.getElementById('addNewsBtn').addEventListener('click', handleAddNews);
+
+      // Copy Button
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        const text = document.getElementById('exportOutput').value;
+        if (text) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast('已複製到剪貼簿');
+          });
+        }
+      });
+
+      // Shorten URL Button
+      document.getElementById('shortenBtn').addEventListener('click', handleShortenURLs);
+
+      // Formatting Controls
+      document.getElementById('catFormatSelect').addEventListener('change', (e) => {
+        state.options.catFormat = e.target.value;
+        updateExportText();
+      });
+
+      document.getElementById('numToggle').addEventListener('change', (e) => {
+        state.options.useNumbering = e.target.checked;
+        updateExportText();
+      });
+
+      // Global Deselecting when clicking empty space
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.news-bubble')) {
+          selectedNewsIds.clear();
+          lastSelectedNewsId = null;
+          updateSelectionStyles();
+        }
+      });
+    }
+
+    // --- Core Action Handlers ---
+
+    // 1. Add News Handler (Flexible URL & Title detection)
+    function handleAddNews() {
+      const input = document.getElementById('newsInput');
+      const rawText = input.value.trim();
+
       if (!rawText) return;
 
-      const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
-      let title = '';
-      let url = '';
+      const formattedText = autoFormatInput(rawText);
+      const lines = formattedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      let parsedItems = [];
 
-      // 判斷哪一行是網址
-      lines.forEach(line => {
-        if (line.startsWith('http://') || line.startsWith('https://')) {
-          url = line;
+      let currentTitle = null;
+      let currentUrl = null;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const isUrl = /^https?:\/\//i.test(line);
+
+        if (isUrl) {
+          if (currentUrl) {
+            // Consecutive URLs: Previous URL was standalone ("無標題新聞")
+            parsedItems.push({ title: currentTitle || '無標題新聞', url: currentUrl });
+            currentTitle = null;
+          }
+          currentUrl = line;
         } else {
-          title += (title ? ' ' : '') + line;
+          if (currentTitle && !currentUrl) {
+            // Consecutive Titles: Previous title was standalone without URL
+            parsedItems.push({ title: currentTitle, url: '' });
+            currentTitle = line;
+          } else if (currentTitle && currentUrl) {
+            // Already had a Title-URL pair, now starting new Title
+            parsedItems.push({ title: currentTitle, url: currentUrl });
+            currentTitle = line;
+            currentUrl = null;
+          } else if (!currentTitle && currentUrl) {
+            // URL came FIRST, now we got a Title! Pair them up.
+            parsedItems.push({ title: line, url: currentUrl });
+            currentTitle = null;
+            currentUrl = null;
+          } else {
+            currentTitle = line;
+          }
         }
+      }
+
+      // Handle remaining pending item at the end
+      if (currentTitle || currentUrl) {
+        if (currentTitle && currentUrl) {
+          parsedItems.push({ title: currentTitle, url: currentUrl });
+        } else if (currentUrl) {
+          parsedItems.push({ title: currentTitle || '無標題新聞', url: currentUrl });
+        } else if (currentTitle) {
+          parsedItems.push({ title: currentTitle, url: '' });
+        }
+      }
+
+      // Validation requirement: Alert if any title-only items exist
+      const hasTitleOnly = parsedItems.some(item => !item.url);
+
+      if (hasTitleOnly) {
+        alert('未輸入網址');
+      }
+
+      let addedCount = 0;
+      const targetSubcat = state.sections[0].subcategories[0]; // First section's "未分類新聞"
+
+      parsedItems.forEach(item => {
+        let finalTitle = applyMediaTag(item.title, item.url);
+        const newItem = {
+          id: 'news_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+          title: finalTitle,
+          url: item.url
+        };
+        targetSubcat.news.push(newItem);
+        addedCount++;
       });
 
-      if (!title && url) title = '新聞連結';
-
-      const newItem = {
-        id: 'news_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        title: title,
-        url: url
-      };
-
-      // 預設放到「早報輿情整理」的「未分類新聞」
-      data[0].subCategories[0].items.push(newItem);
-
-      document.getElementById('rawInput').value = '';
-      renderLeftPanel();
-      renderOutput();
-      
-      // 自動複製到剪貼簿
-      copyToClipboard(true);
+      if (addedCount > 0) {
+        input.value = '';
+        renderDOM();
+        updateExportText(true); // Auto sync output to clipboard
+        showToast(`已新增 ${addedCount} 則新聞`);
+      }
     }
 
-    // 新增小分類邏輯
-    function addNewSubCategory() {
-      const input = document.getElementById('newSubCatName');
-      const title = input.value.trim();
-      if (!title) return;
+    // 2. Shorten URLs via Reurl API
+    async function handleShortenURLs() {
+      const shortenBtn = document.getElementById('shortenBtn');
+      const originalBtnText = shortenBtn.innerHTML;
+      shortenBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>縮短中...</span>`;
+      shortenBtn.disabled = true;
 
-      const newSub = {
-        id: 'sub_' + Date.now(),
-        title: title,
-        items: []
-      };
+      let count = 0;
+      const apiKey = '4070ff49d794e43312533b663c974755ecd4b635959b04df8a38b58d65165567c4f5d6';
 
-      // 預設建立在早報輿情整理下
-      data[0].subCategories.push(newSub);
-      input.value = '';
-      renderLeftPanel();
-      renderOutput();
+      for (let sec of state.sections) {
+        for (let sub of sec.subcategories) {
+          for (let news of sub.news) {
+            if (!news.url) continue;
+
+            // Exception handling: Exclude YouTube and already shortened URLs
+            const isYouTube = /youtube\.com|youtu\.be/i.test(news.url);
+            const isAlreadyShort = /reurl\.cc/i.test(news.url);
+
+            if (!isYouTube && !isAlreadyShort) {
+              try {
+                const response = await fetch('https://api.reurl.cc/shorten', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'reurl-api-key': apiKey
+                  },
+                  body: JSON.stringify({ url: news.url })
+                });
+
+                const data = await response.json();
+                if (data.res === 'success' && data.short_url) {
+                  news.url = data.short_url;
+                  count++;
+                }
+              } catch (err) {
+                console.error('Failed to shorten URL:', news.url, err);
+              }
+            }
+          }
+        }
+      }
+
+      shortenBtn.innerHTML = originalBtnText;
+      shortenBtn.disabled = false;
+
+      renderDOM();
+      updateExportText();
+      showToast('已縮短網址');
     }
 
-    // 渲染左欄
-    function renderLeftPanel() {
-      const container = document.getElementById('categoryTree');
-      container.innerHTML = '';
+    // --- Text Export Generation & Synchronization ---
+    function generateExportText() {
+      let lines = [];
+      const isHashtag = state.options.catFormat === 'hashtag';
+      const useNumbering = state.options.useNumbering;
 
-      data.forEach((bigCat, bigIdx) => {
-        const bigDiv = document.createElement('div');
-        bigDiv.className = 'big-category';
+      state.sections.forEach(sec => {
+        // Collect active subcategories with news
+        const activeSubcats = sec.subcategories.filter(sub => sub.news.length > 0);
 
-        // 大分類標題 (可編輯)
-        const bigTitle = document.createElement('div');
-        bigTitle.className = 'big-category-title';
-        bigTitle.innerHTML = `<input type="text" value="${escapeHtml(bigCat.title)}" onchange="updateBigCatTitle(${bigIdx}, this.value)">`;
-        bigDiv.appendChild(bigTitle);
+        if (activeSubcats.length === 0) return; // Hide section if no news items anywhere
 
-        // 小分類列表
-        bigCat.subCategories.forEach((subCat, subIdx) => {
-          const subDiv = document.createElement('div');
-          subDiv.className = 'sub-category';
-          subDiv.dataset.bigIdx = bigIdx;
-          subDiv.dataset.subIdx = subIdx;
+        // Format Big Category Title
+        const secHeader = isHashtag ? `#${sec.name}` : `【${sec.name}】`;
+        lines.push(secHeader);
+        lines.push(''); // Blank line after big category
 
-          // 拖拽放置區 (小分類)
-          subDiv.ondragover = (e) => e.preventDefault();
-          subDiv.ondrop = (e) => handleDropOnSubCat(e, bigIdx, subIdx);
+        activeSubcats.forEach(sub => {
+          // Format Subcategory Title
+          const subHeader = isHashtag ? `#${sub.name}` : `【${sub.name}】`;
+          lines.push(subHeader);
 
-          const subHeader = document.createElement('div');
-          subHeader.className = 'sub-category-header';
-          subHeader.draggable = true;
-          subHeader.ondragstart = (e) => handleSubCatDragStart(e, bigIdx, subIdx);
+          let numIndex = 1;
+          sub.news.forEach((news, idx) => {
+            let titlePrefix = useNumbering ? `${numIndex}. ` : '';
+            lines.push(`${titlePrefix}${news.title}`);
+            if (news.url) {
+              lines.push(news.url);
+            }
 
-          subHeader.innerHTML = `
-            <span class="drag-handle" title="拖動分類">⋮⋮</span>
-            <input type="text" value="${escapeHtml(subCat.title)}" onchange="updateSubCatTitle(${bigIdx}, ${subIdx}, this.value)">
-            ${subCat.title !== '未分類新聞' ? `<button class="btn-delete" onclick="deleteSubCat(${bigIdx}, ${subIdx})">×</button>` : ''}
-          `;
-          subDiv.appendChild(subHeader);
-
-          // 新聞氣泡列表
-          const itemsDiv = document.createElement('div');
-          itemsDiv.className = 'news-items-container';
-
-          subCat.items.forEach((item, itemIdx) => {
-            const bubble = document.createElement('div');
-            bubble.className = `news-bubble ${selectedNewsIds.has(item.id) ? 'selected' : ''}`;
-            bubble.draggable = true;
-            bubble.dataset.id = item.id;
-
-            // 選擇與拖曳事件
-            bubble.onclick = (e) => handleNewsClick(e, item.id);
-            bubble.ondragstart = (e) => handleNewsDragStart(e, item.id);
-            bubble.ondragover = (e) => e.preventDefault();
-            bubble.ondrop = (e) => handleDropOnNews(e, bigIdx, subIdx, itemIdx);
-
-            bubble.innerHTML = `
-              <span class="drag-handle" title="拖動新聞">⋮⋮</span>
-              <div class="news-content">
-                <input type="text" value="${escapeHtml(item.title)}" placeholder="新聞標題" onchange="updateNewsItem(${bigIdx}, ${subIdx}, ${itemIdx}, 'title', this.value)">
-                <input type="text" value="${escapeHtml(item.url)}" placeholder="新聞網址" onchange="updateNewsItem(${bigIdx}, ${subIdx}, ${itemIdx}, 'url', this.value)">
-              </div>
-              <button class="btn-delete" onclick="deleteNewsItem(${bigIdx}, ${subIdx}, ${itemIdx})">×</button>
-            `;
-            itemsDiv.appendChild(bubble);
+            // Blank line between news items
+            if (idx < sub.news.length - 1) {
+              lines.push('');
+            }
+            numIndex++;
           });
 
-          subDiv.appendChild(itemsDiv);
-          bigDiv.appendChild(subDiv);
+          // Blank line after subcategory block
+          lines.push('');
+        });
+      });
+
+      return lines.join('\n').trim();
+    }
+
+    function updateExportText(autoCopy = false) {
+      const exportText = generateExportText();
+      const outputTextarea = document.getElementById('exportOutput');
+      outputTextarea.value = exportText;
+
+      if (autoCopy && exportText) {
+        navigator.clipboard.writeText(exportText).catch(e => console.error('Auto copy error:', e));
+      }
+    }
+
+    // --- DOM Rendering Engine ---
+    function renderDOM() {
+      const container = document.getElementById('sectionsContainer');
+      container.innerHTML = '';
+
+      state.sections.forEach(sec => {
+        const secEl = document.createElement('div');
+        secEl.className = 'bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4';
+
+        // Big Category Header
+        const secHeader = document.createElement('div');
+        secHeader.className = 'flex items-center justify-between border-b border-slate-100 pb-3';
+        secHeader.innerHTML = `
+          <input
+            type="text"
+            value="${escapeHtml(sec.name)}"
+            class="text-base font-bold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-500 focus:bg-white px-1 py-0.5 rounded outline-none transition w-full max-w-md"
+            onchange="updateSectionName('${sec.id}', this.value)"
+          />
+          <button
+            onclick="addSubcategory('${sec.id}')"
+            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded flex items-center space-x-1 transition shrink-0 ml-2"
+          >
+            <i class="fa-solid fa-plus"></i>
+            <span>新增分類</span>
+          </button>
+        `;
+        secEl.appendChild(secHeader);
+
+        // Subcategories List Container
+        const subContainer = document.createElement('div');
+        subContainer.className = 'space-y-4';
+
+        sec.subcategories.forEach((sub, subIdx) => {
+          const subEl = document.createElement('div');
+          subEl.className = 'bg-slate-50/70 border border-slate-200 rounded-md p-3.5 space-y-3 subcategory-dropzone';
+          subEl.dataset.secId = sec.id;
+          subEl.dataset.subId = sub.id;
+
+          // Dragover events for subcategory container (drop at bottom)
+          setupSubcategoryDropzone(subEl, sec.id, sub.id);
+
+          // Subcategory Header Row
+          const subHeader = document.createElement('div');
+          subHeader.className = 'flex items-center justify-between text-sm';
+          
+          let controlsHtml = '';
+          if (!sub.isDefault) {
+            controlsHtml = `
+              <div class="flex items-center space-x-1 text-slate-400">
+                <button onclick="moveSubcategory('${sec.id}', '${sub.id}', 'up')" class="hover:text-slate-700 p-1 text-xs" title="向上移動"><i class="fa-solid fa-caret-up"></i></button>
+                <button onclick="moveSubcategory('${sec.id}', '${sub.id}', 'down')" class="hover:text-slate-700 p-1 text-xs" title="向下移動"><i class="fa-solid fa-caret-down"></i></button>
+                <button onclick="deleteSubcategory('${sec.id}', '${sub.id}')" class="hover:text-red-500 p-1 text-xs ml-1" title="刪除分類"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            `;
+          }
+
+          subHeader.innerHTML = `
+            <div class="flex items-center space-x-2 flex-1">
+              <input
+                type="text"
+                value="${escapeHtml(sub.name)}"
+                ${sub.isDefault ? 'readonly' : ''}
+                class="font-semibold text-slate-700 bg-transparent ${sub.isDefault ? 'cursor-default' : 'border-b border-transparent hover:border-slate-300 focus:border-slate-500 focus:bg-white'} px-1 py-0.5 rounded outline-none transition text-sm flex-1 max-w-xs"
+                onchange="updateSubcategoryName('${sec.id}', '${sub.id}', this.value)"
+              />
+            </div>
+            ${controlsHtml}
+          `;
+          subEl.appendChild(subHeader);
+
+          // News Bubbles List
+          const newsContainer = document.createElement('div');
+          newsContainer.className = 'space-y-2 min-h-[10px]';
+
+          sub.news.forEach(news => {
+            const newsBubble = createNewsBubbleEl(news, sec.id, sub.id);
+            newsContainer.appendChild(newsBubble);
+          });
+
+          subEl.appendChild(newsContainer);
+          subContainer.appendChild(subEl);
         });
 
-        container.appendChild(bigDiv);
+        secEl.appendChild(subContainer);
+        container.appendChild(secEl);
+      });
+
+      updateSelectionStyles();
+    }
+
+    // --- News Bubble Creation ---
+    function createNewsBubbleEl(news, secId, subId) {
+      const el = document.createElement('div');
+      el.className = `news-bubble bg-white border border-slate-200 rounded-md p-2.5 shadow-sm hover:border-slate-300 transition relative flex items-start space-x-2 cursor-pointer`;
+      el.dataset.newsId = news.id;
+      el.dataset.secId = secId;
+      el.dataset.subId = subId;
+      el.draggable = true;
+
+      // Click Selection Handler (Supports Shift / Ctrl / Cmd)
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleNewsClick(e, news.id);
+      });
+
+      // Drag and Drop Event Listeners
+      setupNewsDragAndDrop(el, news.id, secId, subId);
+
+      el.innerHTML = `
+        <div class="drag-handle text-slate-300 hover:text-slate-500 cursor-grab mt-0.5 px-0.5">
+          <i class="fa-solid fa-bars"></i>
+        </div>
+        <div class="flex-1 min-w-0 space-y-0.5">
+          <div
+            contenteditable="true"
+            class="news-title text-sm font-medium text-slate-800 outline-none focus:bg-slate-50 focus:ring-1 focus:ring-slate-300 rounded px-1 -mx-1"
+            onblur="updateNewsTitle('${secId}', '${subId}', '${news.id}', this.innerText)"
+            onclick="e.stopPropagation()"
+          >${escapeHtml(news.title)}</div>
+          ${news.url ? `<a href="${escapeHtml(news.url)}" target="_blank" onclick="e.stopPropagation()" class="text-xs text-blue-600 hover:underline truncate block">${escapeHtml(news.url)}</a>` : ''}
+        </div>
+        <button
+          onclick="deleteNews('${secId}', '${subId}', '${news.id}', event)"
+          class="text-slate-300 hover:text-red-500 p-1 text-xs transition"
+          title="刪除新聞"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+
+      return el;
+    }
+
+    // --- Multi-Selection Logic ---
+    function getAllNewsIdsInOrder() {
+      let list = [];
+      state.sections.forEach(sec => {
+        sec.subcategories.forEach(sub => {
+          sub.news.forEach(news => {
+            list.push(news.id);
+          });
+        });
+      });
+      return list;
+    }
+
+    function handleNewsClick(e, newsId) {
+      const allIds = getAllNewsIdsInOrder();
+
+      if (e.shiftKey && lastSelectedNewsId) {
+        const startIdx = allIds.indexOf(lastSelectedNewsId);
+        const endIdx = allIds.indexOf(newsId);
+        if (startIdx !== -1 && endIdx !== -1) {
+          const range = allIds.slice(Math.min(startIdx, endIdx), Math.max(startIdx, endIdx) + 1);
+          range.forEach(id => selectedNewsIds.add(id));
+        }
+      } else if (e.ctrlKey || e.metaKey) {
+        if (selectedNewsIds.has(newsId)) {
+          selectedNewsIds.delete(newsId);
+        } else {
+          selectedNewsIds.add(newsId);
+          lastSelectedNewsId = newsId;
+        }
+      } else {
+        selectedNewsIds.clear();
+        selectedNewsIds.add(newsId);
+        lastSelectedNewsId = newsId;
+      }
+
+      updateSelectionStyles();
+    }
+
+    function updateSelectionStyles() {
+      document.querySelectorAll('.news-bubble').forEach(el => {
+        const id = el.dataset.newsId;
+        if (selectedNewsIds.has(id)) {
+          el.classList.add('selected');
+        } else {
+          el.classList.remove('selected');
+        }
       });
     }
 
-    // 轉義 HTML 特殊字元
-    function escapeHtml(str) {
-      return str.replace(/"/g, "&quot;");
-    }
+    // --- Drag and Drop Logic ---
+    let draggedNewsIds = [];
 
-    // 更新資料函式群
-    function updateBigCatTitle(idx, val) {
-      data[idx].title = val;
-      renderOutput();
-    }
-
-    function updateSubCatTitle(bigIdx, subIdx, val) {
-      data[bigIdx].subCategories[subIdx].title = val;
-      renderOutput();
-    }
-
-    function updateNewsItem(bigIdx, subIdx, itemIdx, field, val) {
-      data[bigIdx].subCategories[subIdx].items[itemIdx][field] = val;
-      renderOutput();
-    }
-
-    function deleteSubCat(bigIdx, subIdx) {
-      // 刪除小分類時，將裡面的新聞移至未分類新聞
-      const itemsToMove = data[bigIdx].subCategories[subIdx].items;
-      data[bigIdx].subCategories[0].items.push(...itemsToMove);
-      data[bigIdx].subCategories.splice(subIdx, 1);
-      renderLeftPanel();
-      renderOutput();
-    }
-
-    function deleteNewsItem(bigIdx, subIdx, itemIdx) {
-      const id = data[bigIdx].subCategories[subIdx].items[itemIdx].id;
-      selectedNewsIds.delete(id);
-      data[bigIdx].subCategories[subIdx].items.splice(itemIdx, 1);
-      renderLeftPanel();
-      renderOutput();
-    }
-
-    // 多選 (Shift / Ctrl / Cmd) 邏輯
-    function handleNewsClick(e, id) {
-      e.stopPropagation();
-      const allNewsList = getAllNewsFlatList();
-      
-      if (e.shiftKey && lastSelectedNewsId) {
-        const startIdx = allNewsList.findIndex(n => n.id === lastSelectedNewsId);
-        const endIdx = allNewsList.findIndex(n => n.id === id);
-        const [low, high] = [startIdx, endIdx].sort((a, b) => a - b);
-        
-        for (let i = low; i <= high; i++) {
-          selectedNewsIds.add(allNewsList[i].id);
+    function setupNewsDragAndDrop(el, newsId, secId, subId) {
+      el.addEventListener('dragstart', (e) => {
+        e.stopPropagation();
+        if (!selectedNewsIds.has(newsId)) {
+          selectedNewsIds.clear();
+          selectedNewsIds.add(newsId);
+          lastSelectedNewsId = newsId;
+          updateSelectionStyles();
         }
-      } else if (e.ctrlKey || e.metaKey) {
-        if (selectedNewsIds.has(id)) {
-          selectedNewsIds.delete(id);
+
+        draggedNewsIds = Array.from(selectedNewsIds);
+        e.dataTransfer.setData('text/plain', JSON.stringify(draggedNewsIds));
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      el.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+        if (e.clientY < midY) {
+          el.classList.add('drag-over-top');
         } else {
-          selectedNewsIds.add(id);
+          el.classList.add('drag-over-bottom');
         }
-        lastSelectedNewsId = id;
-      } else {
-        selectedNewsIds.clear();
-        selectedNewsIds.add(id);
-        lastSelectedNewsId = id;
-      }
-      renderLeftPanel();
+      });
+
+      el.addEventListener('dragleave', (e) => {
+        e.stopPropagation();
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const position = e.clientY < midY ? 'before' : 'after';
+
+        moveNewsItemsToPosition(draggedNewsIds, secId, subId, newsId, position);
+      });
     }
 
-    function getAllNewsFlatList() {
-      let flat = [];
-      data.forEach(b => b.subCategories.forEach(s => flat.push(...s.items)));
-      return flat;
+    function setupSubcategoryDropzone(subEl, secId, subId) {
+      subEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        subEl.classList.add('drag-over-container');
+      });
+
+      subEl.addEventListener('dragleave', () => {
+        subEl.classList.remove('drag-over-container');
+      });
+
+      subEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        subEl.classList.remove('drag-over-container');
+
+        // Check if drop target was a specific bubble (handled by bubble drop)
+        if (e.target.closest('.news-bubble')) return;
+
+        // Otherwise append to end of subcategory
+        moveNewsItemsToPosition(draggedNewsIds, secId, subId, null, 'append');
+      });
     }
 
-    // 拖拽處理 - 新聞氣泡
-    function handleNewsDragStart(e, id) {
-      if (!selectedNewsIds.has(id)) {
-        selectedNewsIds.clear();
-        selectedNewsIds.add(id);
-        lastSelectedNewsId = id;
-        renderLeftPanel();
-      }
-      e.dataTransfer.setData('type', 'news');
-    }
+    function moveNewsItemsToPosition(targetIds, destSecId, destSubId, targetNewsId, position) {
+      if (!targetIds || targetIds.length === 0) return;
 
-    function handleDropOnSubCat(e, targetBigIdx, targetSubIdx) {
-      e.preventDefault();
-      e.stopPropagation();
-      const type = e.dataTransfer.getData('type');
-      if (type === 'news') {
-        moveSelectedNewsTo(targetBigIdx, targetSubIdx);
-      }
-    }
+      // Extract items to move
+      let extractedNews = [];
 
-    function handleDropOnNews(e, targetBigIdx, targetSubIdx, targetItemIdx) {
-      e.preventDefault();
-      e.stopPropagation();
-      const type = e.dataTransfer.getData('type');
-      if (type === 'news') {
-        moveSelectedNewsTo(targetBigIdx, targetSubIdx, targetItemIdx);
-      }
-    }
-
-    function moveSelectedNewsTo(targetBigIdx, targetSubIdx, targetItemIdx = null) {
-      let movedItems = [];
-      
-      // 從原位置移除
-      data.forEach(b => {
-        b.subCategories.forEach(s => {
-          s.items = s.items.filter(item => {
-            if (selectedNewsIds.has(item.id)) {
-              movedItems.push(item);
+      state.sections.forEach(sec => {
+        sec.subcategories.forEach(sub => {
+          sub.news = sub.news.filter(item => {
+            if (targetIds.includes(item.id)) {
+              extractedNews.push(item);
               return false;
             }
             return true;
@@ -681,165 +862,142 @@
         });
       });
 
-      // 放入新位置
-      const targetList = data[targetBigIdx].subCategories[targetSubIdx].items;
-      if (targetItemIdx === null) {
-        targetList.push(...movedItems);
+      // Find Destination Subcategory
+      const destSec = state.sections.find(s => s.id === destSecId);
+      if (!destSec) return;
+      const destSub = destSec.subcategories.find(s => s.id === destSubId);
+      if (!destSub) return;
+
+      if (position === 'append' || !targetNewsId) {
+        destSub.news.push(...extractedNews);
       } else {
-        targetList.splice(targetItemIdx, 0, ...movedItems);
-      }
-
-      renderLeftPanel();
-      renderOutput();
-    }
-
-    // 拖拽處理 - 小分類
-    function handleSubCatDragStart(e, bigIdx, subIdx) {
-      e.dataTransfer.setData('type', 'subCat');
-      e.dataTransfer.setData('sourceBigIdx', bigIdx);
-      e.dataTransfer.setData('sourceSubIdx', subIdx);
-    }
-
-    // 渲染右欄最終文字
-    function renderOutput() {
-      const useHash = document.getElementById('tagStyleSwitch').checked;
-      const useNumbering = document.getElementById('numberingSwitch').checked;
-
-      let outputLines = [];
-
-      data.forEach(bigCat => {
-        // 檢查該大分類下是否有新聞氣泡
-        let totalItems = 0;
-        bigCat.subCategories.forEach(s => totalItems += s.items.length);
-
-        if (totalItems > 0) {
-          outputLines.push(bigCat.title);
-          outputLines.push(''); // 空行
-
-          bigCat.subCategories.forEach(subCat => {
-            if (subCat.items.length > 0) {
-              // 分類名稱格式
-              const catLabel = useHash ? `#${subCat.title}` : `【${subCat.title}】`;
-              outputLines.push(catLabel);
-
-              subCat.items.forEach((item, idx) => {
-                const numberPrefix = useNumbering ? `${idx + 1}. ` : '';
-                const mediaTag = getMediaTag(item.url);
-                const titleLine = `${numberPrefix}${item.title}${mediaTag}`;
-                
-                outputLines.push(titleLine);
-                if (item.url) outputLines.push(item.url);
-                outputLines.push(''); // 氣泡間空行
-              });
-            }
-          });
-        }
-      });
-
-      document.getElementById('outputText').value = outputLines.join('\n').trim();
-    }
-// Reurl 一鍵短網址 API (支援本地 file:// 跨網域存取與錯誤處理)
-    async function shortenUrls() {
-      const apiKey = "4070ff49d794e43312533b663c974755ecd4b635959b04df8a38b58d65165567c4f5d6";
-      let targetItems = [];
-
-      // 收集需要縮網址的項目
-      data.forEach(bigCat => {
-        bigCat.subCategories.forEach(subCat => {
-          subCat.items.forEach(item => {
-            if (item.url) {
-              const lowerUrl = item.url.toLowerCase();
-              // 排除 YouTube 與已縮短的 reurl 網址
-              if (!lowerUrl.includes('youtube.com') && 
-                  !lowerUrl.includes('youtu.be') && 
-                  !lowerUrl.includes('reurl.cc')) {
-                targetItems.push(item);
-              }
-            }
-          });
-        });
-      });
-
-      if (targetItems.length === 0) {
-        alert('沒有需要縮短的網址（已排除 YouTube 或已是短網址）。');
-        return;
-      }
-
-      let successCount = 0;
-      let failCount = 0;
-
-      for (let item of targetItems) {
-        try {
-          // 優先嘗試直接發送 Request
-          let response = await fetch('https://api.reurl.cc/v1/shorten', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'reurl-api-key': apiKey
-            },
-            body: JSON.stringify({ url: item.url })
-          });
-
-          // 若遇到本地端的 CORS 擋抓，改走代理備援
-          if (!response.ok && response.status === 0) {
-            throw new Error("CORS_BLOCKED");
-          }
-
-          let resData = await response.json();
-          if (resData && resData.res === 'success' && resData.short_url) {
-            item.url = resData.short_url;
-            successCount++;
-          } else {
-            failCount++;
-          }
-        } catch (err) {
-          // 跨網域失敗時的備援方案 (使用 corsproxy)
-          try {
-            let proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.reurl.cc/v1/shorten');
-            let response = await fetch(proxyUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'reurl-api-key': apiKey
-              },
-              body: JSON.stringify({ url: item.url })
-            });
-
-            let resData = await response.json();
-            if (resData && resData.res === 'success' && resData.short_url) {
-              item.url = resData.short_url;
-              successCount++;
-            } else {
-              failCount++;
-            }
-          } catch (proxyErr) {
-            console.error("縮網址失敗:", proxyErr);
-            failCount++;
-          }
+        const destIdx = destSub.news.findIndex(n => n.id === targetNewsId);
+        if (destIdx !== -1) {
+          const insertIdx = position === 'before' ? destIdx : destIdx + 1;
+          destSub.news.splice(insertIdx, 0, ...extractedNews);
+        } else {
+          destSub.news.push(...extractedNews);
         }
       }
 
-      // 更新畫面與純文字預覽
-      renderLeftPanel();
-      renderOutput();
+      renderDOM();
+      updateExportText();
+    }
 
-      if (failCount === 0) {
-        alert(`成功縮短 ${successCount} 個網址！`);
-      } else {
-        alert(`完成！成功：${successCount} 個，失敗：${failCount} 個。（請檢查 API Key 是否有配額或網址格式）`);
+    // --- State Mutation Methods ---
+
+    function updateSectionName(secId, newName) {
+      const sec = state.sections.find(s => s.id === secId);
+      if (sec) {
+        sec.name = newName.trim();
+        updateExportText();
       }
     }
 
-    // 複製至剪貼簿
-    function copyToClipboard(silent = false) {
-      const text = document.getElementById('outputText').value;
-      if (!text) return;
+    function addSubcategory(secId) {
+      const sec = state.sections.find(s => s.id === secId);
+      if (sec) {
+        const newSub = {
+          id: 'sub_' + Date.now(),
+          name: '自訂分類',
+          isDefault: false,
+          news: []
+        };
+        sec.subcategories.push(newSub);
+        renderDOM();
+        updateExportText();
+      }
+    }
 
-      navigator.clipboard.writeText(text).then(() => {
-        if (!silent) alert('已複製到剪貼簿！');
-      }).catch(err => {
-        console.error('複製失敗: ', err);
-      });
+    function updateSubcategoryName(secId, subId, newName) {
+      const sec = state.sections.find(s => s.id === secId);
+      if (sec) {
+        const sub = sec.subcategories.find(s => s.id === subId);
+        if (sub && !sub.isDefault) {
+          sub.name = newName.trim();
+          updateExportText();
+        }
+      }
+    }
+
+    function moveSubcategory(secId, subId, direction) {
+      const sec = state.sections.find(s => s.id === secId);
+      if (!sec) return;
+
+      const idx = sec.subcategories.findIndex(s => s.id === subId);
+      if (idx === -1) return;
+
+      if (direction === 'up' && idx > 1) { // 0 is default Uncategorized
+        const temp = sec.subcategories[idx];
+        sec.subcategories[idx] = sec.subcategories[idx - 1];
+        sec.subcategories[idx - 1] = temp;
+      } else if (direction === 'down' && idx < sec.subcategories.length - 1) {
+        const temp = sec.subcategories[idx];
+        sec.subcategories[idx] = sec.subcategories[idx + 1];
+        sec.subcategories[idx + 1] = temp;
+      }
+
+      renderDOM();
+      updateExportText();
+    }
+
+    function deleteSubcategory(secId, subId) {
+      const sec = state.sections.find(s => s.id === secId);
+      if (!sec) return;
+
+      const subIdx = sec.subcategories.findIndex(s => s.id === subId);
+      if (subIdx === -1) return;
+
+      const subToDelete = sec.subcategories[subIdx];
+      if (subToDelete.isDefault) return; // Cannot delete default
+
+      // Move orphaned news back to default "未分類新聞"
+      const defaultSub = sec.subcategories.find(s => s.isDefault);
+      if (defaultSub && subToDelete.news.length > 0) {
+        defaultSub.news.push(...subToDelete.news);
+      }
+
+      sec.subcategories.splice(subIdx, 1);
+      renderDOM();
+      updateExportText();
+    }
+
+    function updateNewsTitle(secId, subId, newsId, newTitle) {
+      const sec = state.sections.find(s => s.id === secId);
+      if (!sec) return;
+      const sub = sec.subcategories.find(s => s.id === subId);
+      if (!sub) return;
+      const news = sub.news.find(n => n.id === newsId);
+      if (news) {
+        news.title = newTitle.trim();
+        updateExportText();
+      }
+    }
+
+    function deleteNews(secId, subId, newsId, event) {
+      if (event) event.stopPropagation();
+
+      const sec = state.sections.find(s => s.id === secId);
+      if (!sec) return;
+      const sub = sec.subcategories.find(s => s.id === subId);
+      if (!sub) return;
+
+      sub.news = sub.news.filter(n => n.id !== newsId);
+      selectedNewsIds.delete(newsId);
+
+      renderDOM();
+      updateExportText();
+    }
+
+    // --- HTML Sanitizer ---
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
   </script>
 </body>
