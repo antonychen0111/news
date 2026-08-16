@@ -108,8 +108,8 @@
         <div class="flex flex-row space-x-3">
           <textarea
             id="newsInput"
-            class="flex-1 h-24 p-3 text-sm border border-slate-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
-            placeholder="請在此依序貼上標題及網址...&#10;每次新增會複製全部到剪貼簿，不用擔心網頁跳掉！"
+            class="flex-1 h-24 p-3 text-sm font-regular border border-slate-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
+            placeholder="請在此依序貼上標題及網址..."
           ></textarea>
           <button
             id="addNewsBtn"
@@ -175,8 +175,8 @@
         <textarea
           id="exportOutput"
           readonly
-          class="w-full h-[350px] lg:h-[calc(100vh-280px)] min-h-[300px] p-3 font-mono text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none resize-none leading-relaxed"
-          placeholder="即時導出文字顯示於此..."
+          class="w-full h-[350px] lg:h-[calc(100vh-280px)] min-h-[300px] p-3 text-xs font-regular bg-slate-50 border border-slate-200 rounded-md focus:outline-none resize-none leading-relaxed"
+          placeholder="即時導出文字顯示於此...&#10;&#10;【使用說明】&#10;① 保險機制：每次新增會複製全部到剪貼簿，不用擔心網頁跳掉&#10;② 批量新增：可以一次貼上多條標題 + 網址，系統將自動識別&#10;③ 媒體標註：主動偵測網址，並在標題後附註媒體來源&#10;④ 自訂名稱：標題和分類名稱都可以點擊修改&#10;⑤ 快速排序：支援 Shift 連選及 Ctrl 跳選&#10;⑥ 縮址篩選：一鍵縮短網址時，自動過濾 YouTube 網址"
         ></textarea>
 
       </div>
@@ -542,33 +542,35 @@
         if (activeSubcats.length === 0) return; // Hide section if no news items anywhere
 
         // Format Big Category Title
-        const secHeader = isHashtag ? `#${sec.name}` : `【${sec.name}】`;
+        const secHeader = isHashtag ? `#${sec.name}` : `${sec.name}`;
         lines.push(secHeader);
         lines.push(''); // Blank line after big category
 
-        activeSubcats.forEach(sub => {
-          // Format Subcategory Title
-          const subHeader = isHashtag ? `#${sub.name}` : `【${sub.name}】`;
-          lines.push(subHeader);
+		  activeSubcats.forEach(sub => {
+			  // 如果不是預設/未分類新聞，才印出分類名稱
+			  if (!sub.isDefault && sub.name !== '未分類新聞') {
+				  const subHeader = isHashtag ? `#${sub.name}` : `【${sub.name}】`;
+				  lines.push(subHeader);
+			  }
 
-          let numIndex = 1;
-          sub.news.forEach((news, idx) => {
-            let titlePrefix = useNumbering ? `${numIndex}. ` : '';
-            lines.push(`${titlePrefix}${news.title}`);
-            if (news.url) {
-              lines.push(news.url);
-            }
+			  let numIndex = 1;
+			  sub.news.forEach((news, idx) => {
+				  let titlePrefix = useNumbering ? `${numIndex}. ` : '';
+				  lines.push(`${titlePrefix}${news.title}`);
+				  if (news.url) {
+					  lines.push(news.url);
+				  }
+				  
+				  // Blank line between news items
+				  if (idx < sub.news.length - 1) {
+					  lines.push('');
+				  }
+				  numIndex++;
+			  });
 
-            // Blank line between news items
-            if (idx < sub.news.length - 1) {
-              lines.push('');
-            }
-            numIndex++;
-          });
-
-          // Blank line after subcategory block
-          lines.push('');
-        });
+			  // Blank line after subcategory block
+			  lines.push('');
+		  });
       });
 
       return lines.join('\n').trim();
