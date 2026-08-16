@@ -482,7 +482,7 @@
     async function handleShortenURLs() {
       const shortenBtn = document.getElementById('shortenBtn');
       const originalBtnText = shortenBtn.innerHTML;
-      shortenBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>縮短中...</span>`;
+      shortenBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>縮短網址中...</span>`;
       shortenBtn.disabled = true;
 
       let count = 0;
@@ -542,7 +542,7 @@
         if (activeSubcats.length === 0) return; // Hide section if no news items anywhere
 
         // Format Big Category Title
-        const secHeader = isHashtag ? `#${sec.name}` : `${sec.name}`;
+        const secHeader = isHashtag ? `${sec.name}` : `${sec.name}`;
         lines.push(secHeader);
         lines.push(''); // Blank line after big category
 
