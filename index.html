@@ -125,6 +125,16 @@
       <div id="sectionsContainer" class="space-y-6">
         <!-- Sections dynamically generated via JS -->
       </div>
+		
+		
+      <!-- 新增：全寬/長條形的新增大分類按鈕 -->
+      <button
+        id="addSectionBtn"
+        onclick="addSection()"
+        class="w-full py-3 bg-white border-2 border-dashed border-slate-300 hover:border-slate-400 text-slate-600 hover:text-slate-800 font-medium rounded-lg shadow-sm flex items-center justify-center space-x-2 transition hover:bg-slate-50"
+      >
+        <i class="fa-solid fa-plus text-xs"></i>
+      </button>
 
     </section>
 
@@ -906,7 +916,24 @@
         updateExportText();
       }
     }
-
+	  
+	  // 新增大分類函數
+    function addSection() {
+      const newSecId = 'sec_' + Date.now();
+      const newSection = {
+        id: newSecId,
+        name: '自訂分類', // 預設名稱為「自訂分類」
+        subcategories: [
+          { id: 'sub_uncat_' + Date.now(), name: '未分類新聞', isDefault: true, news: [] }
+        ]
+      };
+      
+      state.sections.push(newSection);
+      renderDOM();
+      updateExportText();
+      showToast('已新增大分類');
+    }
+	  
     function updateSubcategoryName(secId, subId, newName) {
       const sec = state.sections.find(s => s.id === secId);
       if (sec) {
