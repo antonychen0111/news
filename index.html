@@ -61,7 +61,7 @@
     }
     .drag-over-container {
       background-color: #f1f5f9 !important;
-      border: 2px dashed #94a3b8 !important;
+      border: 1px dashed #94a3b8 !important;
     }
 
     /* News Item Selected State */
@@ -87,12 +87,12 @@
 <body class="bg-gray-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+  <header class="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
     <div class="flex items-center space-x-3">
       <img src="https://chiao.tw/wp-content/uploads/2026/06/%E5%AE%98%E7%B6%B2%E7%B4%A0%E6%9D%90_logo.svg" alt="Logo" class="w-7 h-7 object-contain" onerror="this.src='https://via.placeholder.com/28?text=N'" />
       <h1 class="text-xl font-bold text-slate-800 tracking-wide">新聞輿情整理小工具</h1>
     </div>
-    <div class="text-xs font-medium text-slate-400">
+    <div class="text-xs font-medium text-slate-300">
       20260816 盈誌 V1
     </div>
   </header>
@@ -108,12 +108,12 @@
         <div class="flex flex-row space-x-3">
           <textarea
             id="newsInput"
-            class="flex-1 h-24 p-3 text-sm font-regular border border-slate-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
+            class="flex-1 h-24 p-3 text-sm font-regular border border-slate-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent transition"
             placeholder="請在此依序貼上標題及網址..."
           ></textarea>
           <button
             id="addNewsBtn"
-            class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow flex items-center justify-center space-x-1.5 transition shrink-0 h-24"
+            class="px-4 py-2 bg-slate-600 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow flex items-center justify-center space-x-1.5 transition shrink-0 h-24"
           >
             <i class="fa-solid fa-plus text-xs"></i>
             <span>新增新聞</span>
@@ -131,7 +131,7 @@
       <button
         id="addSectionBtn"
         onclick="addSection()"
-        class="w-full py-2 bg-white border border-dashed border-slate-300 hover:border-slate-400 text-slate-600 hover:text-slate-800 font-medium rounded-lg shadow-sm flex items-center justify-center space-x-2 transition hover:bg-slate-50"
+        class="w-full py-2 bg-white border border-dashed border-slate-300 hover:border-slate-600 text-slate-300 hover:text-slate-600 font-medium rounded-lg shadow-sm flex items-center justify-center space-x-2 transition hover:bg-slate-50"
       >
         <i class="fa-solid fa-plus text-xs"></i>
       </button>
@@ -146,14 +146,14 @@
         <div class="flex items-center space-x-3">
           <button
             id="copyBtn"
-            class="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-md shadow flex items-center justify-center space-x-2 transition"
+            class="flex-1 py-3 px-4 bg-slate-600 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow flex items-center justify-center space-x-2 transition"
           >
             <i class="fa-regular fa-copy"></i>
             <span>複製到剪貼簿</span>
           </button>
           <button
             id="shortenBtn"
-            class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-sm font-medium rounded-md flex items-center justify-center space-x-2 transition"
+            class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 text-sm font-medium rounded-md flex items-center justify-center space-x-2 transition"
           >
             <i class="fa-solid fa-link"></i>
             <span>一鍵短網址</span>
@@ -164,8 +164,8 @@
         <div class="flex items-center justify-between bg-slate-50 p-3 rounded-md border border-slate-200 text-sm">
           <!-- Category Format -->
           <div class="flex items-center space-x-2">
-            <span class="text-xs font-semibold text-slate-500">分類格式：</span>
-            <select id="catFormatSelect" class="bg-white border border-slate-300 text-slate-700 rounded px-2 py-1 text-xs focus:outline-none">
+            <span class="text-xs font-medium text-slate-600">分類格式：</span>
+            <select id="catFormatSelect" class="bg-white border border-slate-300 text-slate-600 rounded px-2 py-1 text-xs focus:outline-none">
               <option value="bracket">【分類名】</option>
               <option value="hashtag">#分類名</option>
             </select>
@@ -173,7 +173,7 @@
 
           <!-- Numbering Switch -->
           <div class="flex items-center space-x-2">
-            <span class="text-xs font-semibold text-slate-500">數字編號：</span>
+            <span class="text-xs font-medium text-slate-600">數字編號：</span>
             <label class="switch">
               <input type="checkbox" id="numToggle">
               <span class="slider"></span>
@@ -195,8 +195,8 @@
   </main>
 
   <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-4 py-2.5 rounded-md shadow-lg text-sm font-medium transition transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-2">
-    <i id="toastIcon" class="fa-solid fa-check-circle text-emerald-400"></i>
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-600 text-white px-4 py-2.5 rounded-md shadow-lg text-sm font-medium transition transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-2">
+    <i id="toastIcon" class="fa-solid fa-check-circle text-emerald-300"></i>
     <span id="toastMsg">訊息內容</span>
   </div>
 
@@ -293,7 +293,7 @@
     }
 
     // --- Toast Notification Helper ---
-    function showToast(msg, iconClass = 'fa-check-circle text-emerald-400') {
+    function showToast(msg, iconClass = 'fa-check-circle text-emerald-300') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toastMsg');
       const toastIcon = document.getElementById('toastIcon');
@@ -612,12 +612,12 @@
           <input
             type="text"
             value="${escapeHtml(sec.name)}"
-            class="text-base font-bold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-500 focus:bg-white px-1 py-0.5 rounded outline-none transition w-full max-w-md"
+            class="text-base font-bold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-600 focus:bg-white px-1 py-0.5 rounded outline-none transition w-full max-w-md"
             onchange="updateSectionName('${sec.id}', this.value)"
           />
           <button
             onclick="addSubcategory('${sec.id}')"
-            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded flex items-center space-x-1 transition shrink-0 ml-2"
+            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium border border-slate-300 rounded flex items-center space-x-1 transition shrink-0 ml-2"
           >
             <i class="fa-solid fa-plus"></i>
             <span>新增分類</span>
@@ -645,10 +645,10 @@
           let controlsHtml = '';
           if (!sub.isDefault) {
             controlsHtml = `
-              <div class="flex items-center space-x-1 text-slate-400">
-                <button onclick="moveSubcategory('${sec.id}', '${sub.id}', 'up')" class="hover:text-slate-700 p-1 text-xs" title="向上移動"><i class="fa-solid fa-caret-up"></i></button>
-                <button onclick="moveSubcategory('${sec.id}', '${sub.id}', 'down')" class="hover:text-slate-700 p-1 text-xs" title="向下移動"><i class="fa-solid fa-caret-down"></i></button>
-                <button onclick="deleteSubcategory('${sec.id}', '${sub.id}')" class="hover:text-red-500 p-1 text-xs ml-1" title="刪除分類"><i class="fa-solid fa-xmark"></i></button>
+              <div class="flex items-center space-x-1 text-slate-300">
+                <button onclick="moveSubcategory('${sec.id}', '${sub.id}', 'up')" class="hover:text-slate-600 p-1 text-xs" title="向上移動"><i class="fa-solid fa-caret-up"></i></button>
+                <button onclick="moveSubcategory('${sec.id}', '${sub.id}', 'down')" class="hover:text-slate-600 p-1 text-xs" title="向下移動"><i class="fa-solid fa-caret-down"></i></button>
+                <button onclick="deleteSubcategory('${sec.id}', '${sub.id}')" class="hover:text-red-600 p-1 text-xs ml-1" title="刪除分類"><i class="fa-solid fa-xmark"></i></button>
               </div>
             `;
           }
@@ -659,7 +659,7 @@
                 type="text"
                 value="${escapeHtml(sub.name)}"
                 ${sub.isDefault ? 'readonly' : ''}
-                class="font-semibold text-slate-700 bg-transparent ${sub.isDefault ? 'cursor-default' : 'border-b border-transparent hover:border-slate-300 focus:border-slate-500 focus:bg-white'} px-1 py-0.5 rounded outline-none transition text-sm flex-1 max-w-xs"
+                class="font-medium text-slate-600 bg-transparent ${sub.isDefault ? 'cursor-default' : 'border-b border-transparent hover:border-slate-300 focus:border-slate-600 focus:bg-white'} px-1 py-0.5 rounded outline-none transition text-sm flex-1 max-w-xs"
                 onchange="updateSubcategoryName('${sec.id}', '${sub.id}', this.value)"
               />
             </div>
@@ -690,7 +690,7 @@
     // --- News Bubble Creation ---
     function createNewsBubbleEl(news, secId, subId) {
       const el = document.createElement('div');
-      el.className = `news-bubble bg-white border border-slate-200 rounded-md p-2.5 shadow-sm hover:border-slate-300 transition relative flex items-start space-x-2 cursor-pointer`;
+      el.className = `news-bubble bg-white border border-slate-200 rounded-md p-2.5 shadow-sm hover:border-slate-400 transition relative flex items-start space-x-2 cursor-pointer`;
       el.dataset.newsId = news.id;
       el.dataset.secId = secId;
       el.dataset.subId = subId;
@@ -706,7 +706,7 @@
       setupNewsDragAndDrop(el, news.id, secId, subId);
 
       el.innerHTML = `
-        <div class="drag-handle text-slate-300 hover:text-slate-500 cursor-grab mt-0.5 px-0.5">
+        <div class="drag-handle text-slate-300 hover:text-slate-600 cursor-grab mt-0.5 px-0.5">
           <i class="fa-solid fa-bars"></i>
         </div>
         <div class="flex-1 min-w-0 space-y-0.5">
@@ -720,7 +720,7 @@
         </div>
         <button
           onclick="deleteNews('${secId}', '${subId}', '${news.id}', event)"
-          class="text-slate-300 hover:text-red-500 p-1 text-xs transition"
+          class="text-slate-300 hover:text-red-600 p-1 text-xs transition"
           title="刪除新聞"
         >
           <i class="fa-solid fa-xmark"></i>
