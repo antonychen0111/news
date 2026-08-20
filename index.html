@@ -129,7 +129,7 @@
         id="addSectionBtn"
         onclick="addSection()"
         class="w-full py-2 bg-white border border-dashed border-slate-300 hover:border-slate-600 text-slate-300 hover:text-slate-600 font-medium rounded-lg shadow-sm flex items-center justify-center space-x-2 transition hover:bg-slate-50"
-        title="新增大分類"
+        title="新增分類"
       >
         <i class="fa-solid fa-plus text-xs"></i>
       </button>
@@ -354,22 +354,22 @@
     }
 
     // 全域通用複製到剪貼簿功能
-    function copyToClipboard(text) {
+    function copyToClipboard(text, showToastFlag = true) {
       if (!text) return;
 
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => {
-          showToast('已複製到剪貼簿');
+          if (showToastFlag) showToast('已複製到剪貼簿');
         }).catch(() => {
-          fallbackCopyText(text);
+          fallbackCopyText(text, showToastFlag);
         });
       } else {
-        fallbackCopyText(text);
+        fallbackCopyText(text, showToastFlag);
       }
     }
 
     // 複製備用方案 (ExecCommand Fallback)
-    function fallbackCopyText(text) {
+    function fallbackCopyText(text, showToastFlag = true) {
       const textarea = document.createElement('textarea');
       textarea.value = text;
       textarea.style.position = 'fixed';
@@ -379,7 +379,7 @@
       textarea.select();
       try {
         document.execCommand('copy');
-        showToast('已複製到剪貼簿');
+        if (showToastFlag) showToast('已複製到剪貼簿');
       } catch (err) {
         showToast('複製失敗，請手動複製', 'fa-triangle-exclamation text-amber-300');
       }
@@ -624,7 +624,7 @@
       outputTextarea.value = exportText;
 
       if (autoCopy && exportText) {
-        copyToClipboard(exportText);
+        copyToClipboard(exportText, false);
       }
     }
 
