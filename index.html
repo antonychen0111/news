@@ -592,7 +592,7 @@
 
         activeSubcats.forEach(sub => {
           if (!sub.isDefault && sub.name !== '未分類新聞') {
-            const subHeader = isHashtag ? `${sub.name}` : `【${sub.name}】`;
+            const subHeader = isHashtag ? `#${sub.name}` : `【${sub.name}】`;
             lines.push(subHeader);
           }
 
